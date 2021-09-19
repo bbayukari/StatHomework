@@ -1,2 +1,2 @@
-# statHomework
-This is the homework of statistics compute.
+# StatHomework
+This S the homework of statistics compute.

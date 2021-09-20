@@ -5,9 +5,9 @@ author: by 21077
 ---
 
 ## Question
+```{r}
 
-Balabalabala
-
+```
 ## Answer
 
 Balabalabala

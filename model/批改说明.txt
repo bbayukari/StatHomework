@@ -1,0 +1,4 @@
+进行批改时，首先在assignment(for reviewers)里找到自己要批改的作业id
+然后将批改结果输入input.txt文档中
+之后运行Scoring.Rmd以及zip.R, 并将生成的压缩包发给助教即可
+注意input.txt文档中的每一项彼此之间是用tab隔开的

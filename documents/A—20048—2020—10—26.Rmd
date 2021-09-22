@@ -1,0 +1,32 @@
+---
+title: "A—20048—2020—10—26"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question
+Exercises 5.13, 5.15, 6.4, and 6.5 (page 151 and 180,
+Statistical Computating with R).
+
+## Answer
+5.13: 
+先画出$g(x)$的图像
+```{r}
+#plot(x,y,type = "l")
+```
+
+\
+5.15: 
+```{r}
+m<-2000
+
+```
+
+\
+6.4
+
+相比样本来自正态分布的置信系数较低，但是更稳健。

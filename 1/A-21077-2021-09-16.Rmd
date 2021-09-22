@@ -1,0 +1,38 @@
+---
+title: "A—21077—2021—10—26"
+author: "by 21077"
+output:
+  html_document: default
+---
+
+## Question
+Use knitr to produce at least 3 examples (texts, figures, tables).
+
+## Answer
+
+1. This is the text. We needn't R to show text, only markdown can do it well.
+2. This is a figure from external file.
+
+<div align=center>
+<img src='figure.png' width = 50%/>
+</div>
+
+This a figure produced by R.
+```{r}
+plot(1:10)
+```
+
+3. This is a table.
+```{r}
+library(knitr)
+kable(head(iris))
+```
+
+This is anather way to show table.
+```{r xtable,results='asis'}
+library(xtable)
+print(xtable(head(iris)),type = 'html')
+```
+In fact, function xtable creates the tex code of tables, and function print make us see the table in html.
+
+

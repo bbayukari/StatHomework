@@ -1,0 +1,78 @@
+---
+title: "A—21077—2021—10—26"
+author: "by 21077"
+output:
+  html_document: default
+---
+
+## Question
+Exercises 3.4, 3.11, and 3.20 (pages 94-96, Statistical Computating with R).
+
+## Answer
+```{r include=FALSE}
+set.seed(1234)
+```
+
+### 3.4
+
+Use acceptance-rejection algorithm to implement Rayleigh.
+
+```{r}
+f <- function(x,sigma) x/sigma^2*exp(-x^2/2/sigma^2)
+
+Rayleigh <- function(sigma,n)
+{
+  g <- function(x) dnorm(x,sd = 2^0.5*sigma)
+  rho <- function(x) {
+    if(x<=0) return(0)
+    f(x,sigma)/g(x)/(8*pi/exp(1))^0.5
+  }
+  
+  ans <- numeric(n)
+  for(i in c(1:n)){
+    while(TRUE){
+      u = runif(1)
+      y = rnorm(1,sd = 2^0.5*sigma)
+      if(u<=rho(y)) {
+        ans[i] <- y
+        break
+      }
+    }
+  }
+  
+  return(ans)  
+}
+
+```
+
+```{r}
+test <- function(sigma,n=40000){
+  x <- Rayleigh(sigma,n)
+  hist(x,prob=TRUE,ylim=range(0,1/sigma*exp(-0.5)))
+  y <- seq(0,floor(max(x))+1,0.01)
+  lines(y,f(y,sigma))
+}
+```
+
+#### Rayleigh with $\sigma=1$
+```{r echo=FALSE}
+test(1)
+```
+
+#### Rayleigh with $\sigma=2$
+```{r echo=FALSE}
+test(2)
+```
+
+#### Rayleigh with $\sigma=5$
+```{r echo=FALSE}
+test(5)
+```
+
+#### Rayleigh with $\sigma=10$
+```{r echo=FALSE}
+test(10)
+```
+
+
+ 

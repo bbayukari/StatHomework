@@ -48,31 +48,79 @@ Rayleigh <- function(sigma,n)
 ```{r}
 test <- function(sigma,n=40000){
   x <- Rayleigh(sigma,n)
-  hist(x,prob=TRUE,ylim=range(0,1/sigma*exp(-0.5)))
+  hist(x,prob=TRUE,ylim=range(0,1/sigma*exp(-0.5)),main = paste0('sigma=',sigma))
   y <- seq(0,floor(max(x))+1,0.01)
   lines(y,f(y,sigma))
 }
 ```
-
-#### Rayleigh with $\sigma=1$
-```{r echo=FALSE}
+```{r}
+par(mfrow = c(2,2))
 test(1)
-```
-
-#### Rayleigh with $\sigma=2$
-```{r echo=FALSE}
 test(2)
-```
-
-#### Rayleigh with $\sigma=5$
-```{r echo=FALSE}
 test(5)
-```
-
-#### Rayleigh with $\sigma=10$
-```{r echo=FALSE}
 test(10)
 ```
 
+
+
+### 3.11
+
+```{r}
+mixture <- function(p,n=1000){
+  x1 <- rnorm(n)
+  x2 <- rnorm(n,mean = 3)
+  r <- sample(c(0,1),size = n,replace = TRUE,prob = c(p,1-p))
+  x <- x1*(1-r)+x2*r
+  return(x)
+}
+```
+
+```{r}
+hist(mixture(0.75,1000),prob = TRUE)
+```
+
+```{r}
+par(mfrow=c(3,3))
+for(p in c(1:9)){
+  hist(mixture(p/10,10000),prob = TRUE,main = paste0('p=0.',p,',size=10000'))
+}
+
+```
+
+When $p_1=0.5$, the mixture is like bimodal.
+
+### 3.20
+```{r}
+compound_pois_gamma <- function(t,lambda,a,b,n=1000){
+  N <- rpois(n=n,lambda = t*lambda)
+  ans <- numeric(n)
+  for(i in c(1:n)){
+    ans[i] <- sum(rgamma(n=N[i],shape = a,rate = b))
+  }
+  return(ans)
+}
+```
+
+```{r}
+t <- 10
+lambda <- c(1,1,1,1,2,2,2,2)
+a <- c(1,1,2,2,1,1,2,2)
+b <- c(1,2,1,2,1,2,1,2)
+mean_estimate <- numeric(8)
+var_estimate <- numeric(8)
+for(i in c(1:8)){
+  x <- compound_pois_gamma(t,lambda[i],a[i],b[i])
+  mean_estimate[i] <- mean(x)
+  var_estimate[i] <- var(x)
+}
+
+mean_theoretical <- lambda*t*a/b
+var_theoretical <- lambda*t*(a+a^2)/b^2
+
+mat <- data.frame(t,lambda,a,b,mean_estimate,mean_theoretical,var_estimate,var_theoretical)
+```
+```{r}
+knitr::kable(mat)
+```
 
  

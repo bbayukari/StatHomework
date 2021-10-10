@@ -1,0 +1,78 @@
+---
+title: "A-21077-2021-09-23"
+author: "by 21077"
+output:
+  html_document: default
+---
+
+## Question
+Exercises 5.4, 5.9, 5.13, and 5.14 (pages 149-151, Statistical Computating with R).
+## Answer
+```{r include=FALSE}
+set.seed(123)
+```
+
+### 5.4
+Write a function to compute a Monte Carlo estimate of the Beta(3, 3) cdf, and use the function to estimate F(x)for x =0.1, 0.2,... , 0.9. Compare the
+estimates with the values returned by the pbeta function in R.
+```{r}
+beta_3_3_pdf <- function(x){
+  x^2*(1-x)^2/beta(3,3) 
+}
+
+beta_3_3_cdf <- function(x){
+  m <- 10000
+  u <- runif(m)
+  mean(beta_3_3_pdf(u*x))*x
+}
+```
+
+```{r}
+est <- numeric(9)
+true <- numeric(9)
+for(i in c(1:9)){
+  true[i] <- pbeta(i/10,3,3)
+  est[i] <- beta_3_3_cdf(i/10)
+}
+
+
+knitr::kable(rbind(est,true,dif = est-true))  
+```
+
+### 5.9
+Implement a function to generate samples from a Rayleigh(σ) distribution, using antithetic variables. What is the percent reduction in variance?
+
+```{r}
+rayleigh_pdf <- function(x,sigma) {
+  ifelse(x>0, x/sigma^2*exp(-x^2/2/sigma^2), 0)
+}
+rayleigh_cdf <- function(x, sigma = 1, R = 1000, antithetic = TRUE) {
+  if(x<=0) return(0)
+  
+  u <- runif(R/2) 
+  v <- ifelse(antithetic, 1-u, runif(R/2))
+  u <- c(u, v)
+  
+  mean(rayleigh_pdf(x*u,sigma))*x
+}
+```
+```{r}
+# Inverse transform algorithm 
+rayleigh_sample <- function(n,sigma = 1, R = 1000, antithetic = TRUE){
+  u <- runif(n)
+  sam <- numeric(n)
+  f <- function(x,c) rayleigh_cdf(x,sigma, R = R, antithetic = antithetic) - c
+  
+  for(i in c(1:n)){
+    sam[i] <- ifelse(f(1000,u[i])>0, uniroot(f,c(-0.1,1000),c=u[i])$root, 1000)
+  }
+  sam
+}
+```
+
+
+
+
+### 5.13
+
+### 5.14

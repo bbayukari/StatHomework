@@ -7,14 +7,17 @@ output:
 
 ## Question
 Exercises 5.4, 5.9, 5.13, and 5.14 (pages 149-151, Statistical Computating with R).
+
 ## Answer
+
 ```{r include=FALSE}
-set.seed(123)
+set.seed(1234)
 ```
 
 ### 5.4
-Write a function to compute a Monte Carlo estimate of the Beta(3, 3) cdf, and use the function to estimate F(x)for x =0.1, 0.2,... , 0.9. Compare the
-estimates with the values returned by the pbeta function in R.
+
+Write a function to compute a Monte Carlo estimate of the Beta(3, 3) cdf, and use the function to estimate F(x)for x =0.1, 0.2,... , 0.9. Compare the estimates with the values returned by the pbeta function in R.
+
 ```{r}
 beta_3_3_pdf <- function(x){
   x^2*(1-x)^2/beta(3,3) 
@@ -43,10 +46,10 @@ knitr::kable(rbind(est,true,dif = est-true))
 Implement a function to generate samples from a Rayleigh(σ) distribution, using antithetic variables. What is the percent reduction in variance?
 
 ```{r}
-rayleigh_pdf <- function(x,sigma) {
+rayleigh_pdf <- function(x,sigma = 1) {
   ifelse(x>0, x/sigma^2*exp(-x^2/2/sigma^2), 0)
 }
-rayleigh_cdf <- function(x, sigma = 1, R = 1000, antithetic = TRUE) {
+rayleigh_cdf <- function(x, sigma = 1, R = 10000, antithetic = TRUE) {
   if(x<=0) return(0)
   
   u <- runif(R/2) 
@@ -56,23 +59,139 @@ rayleigh_cdf <- function(x, sigma = 1, R = 1000, antithetic = TRUE) {
   mean(rayleigh_pdf(x*u,sigma))*x
 }
 ```
+
+Verify the correctness of rayleigh_cdf with sigma = 1.
+
+```{r}
+x <- c(1:10) * 0.3
+true <- numeric(10)
+anti_MC <- numeric(10)
+norm_MC <- numeric(10)
+
+for(i in 1:10){
+  true[i]    <-  integrate(rayleigh_pdf,0,x[i],abs.tol = 1e-5)$value
+  anti_MC[i] <-  rayleigh_cdf(x[i],antithetic = TRUE)
+  norm_MC[i] <-  rayleigh_cdf(x[i],antithetic = FALSE)
+}
+
+knitr::kable(rbind(x,true,anti_MC,norm_MC))
+```
+
+compute the percent reduction in variance of rayleigh_cdf(x = 1, sigma = 1).
+
+```{r}
+R <- 100
+anti_MC <- numeric(R)
+norm_MC <- numeric(R)
+
+for(i in 1:R){
+  anti_MC[i] <-  rayleigh_cdf(1,antithetic = TRUE)
+  norm_MC[i] <-  rayleigh_cdf(1,antithetic = FALSE)
+}
+
+v1 <- var(anti_MC)
+v2 <- var(norm_MC)
+cat("Var of antithetic method is ",v1,'.\n')
+cat("Var of normal method is ",v2,'.\n')
+cat("The percent reduction in variance is ",(v2- v1)/v2*100,"%.\n")
+
+```
+
+Generate samples by using cdf.
+
 ```{r}
 # Inverse transform algorithm 
-rayleigh_sample <- function(n,sigma = 1, R = 1000, antithetic = TRUE){
+rayleigh_sample <- function(n,sigma = 1, R = 10000, antithetic = TRUE){
   u <- runif(n)
   sam <- numeric(n)
   f <- function(x,c) rayleigh_cdf(x,sigma, R = R, antithetic = antithetic) - c
   
   for(i in c(1:n)){
-    sam[i] <- ifelse(f(1000,u[i])>0, uniroot(f,c(-0.1,1000),c=u[i])$root, 1000)
+    #sam[i] <- ifelse(f(1000,u[i])>0, uniroot(f,c(-0.1,1000),c=u[i])$root, 1000)
+    sam[i] <- uniroot(f,c(-0.1,1000),c=u[i],extendInt = 'upX')$root
   }
   sam
 }
+```
+```{r}
+n <- 400
+x <- rayleigh_sample(n)
+x <- x[which(x<10)]
+hist(x,prob=TRUE,ylim=range(0,1/exp(-0.5)), main = "Rayleigh with sigma = 1")
+y <- seq(0,floor(max(x))+1,0.01)
+lines(y,rayleigh_pdf(y))
+```
+
+
+### 5.13
+
+Find two importance functions f1 and f2 that are supported on {x>1} and are ‘close’ to g(x).
+
+```{r}
+g <- function(x){
+  x^2*exp(-x^2/2)/(2*pi)^0.5
+}
+```
+
+I choose normal distribution with mean=0 and sd=1 restricted in $(1,\infty)$ as f1 and chi-square distribution with df=6 restricted in $(1,\infty)$ as f2.
+
+```{r}
+f1 <- function(x){
+  dnorm(x)/(1-pnorm(1))
+}
+f1_sample <- function(n){
+  sam <- numeric(n)
+  for(i in 1:n){
+    sam[i] <- rnorm(1)
+    while(sam[i]<=1){
+      sam[i] <- rnorm(1)
+    }
+  }
+  return(sam)
+}
+f2 <- function(x){
+  dchisq(x,6)/(1-pchisq(1,6))
+}
+f2_sample <- function(n){
+  sam <- numeric(n)
+  for(i in 1:n){
+    sam[i] <- rchisq(1,6)
+    while(sam[i]<=1){
+      sam[i] <- rchisq(1,6)
+    }
+  }
+  return(sam)
+}
+```
+
+Which of your two importance functions should produce the smaller variance?
+
+I think f1 importance function produce the smaller variance, because $\frac{g(x)}{f_1(x)} \sim x^2$ is polynomial and $\frac{g(x)}{f_2(x)}\sim e^{\frac{x(1-x)}{2}}$ is exponential.
+This can be verified in the next question.
+
+### 5.14
+
+Obtain a Monte Carlo estimate by importance sampling.
+
+```{r}
+R <- 100
+int_f1 <- numeric(R)
+int_f2 <- numeric(R)
+
+for(i in 1:R){
+  n <- 100
+  x1 <- f1_sample(n)
+  x2 <- f2_sample(n)
+  
+  int_f1[i] <- mean(g(x1)/f1(x1))
+  int_f2[i] <- mean(g(x2)/f2(x2))
+}
+
+cat("Use f1, the estimate is",mean(int_f1),"and the variance is",var(int_f1))
+cat("Use f2, the estimate is",mean(int_f2),"and the variance is",var(int_f2))
+
 ```
 
 
 
 
-### 5.13
-
-### 5.14
